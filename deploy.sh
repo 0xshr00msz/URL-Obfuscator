@@ -3,8 +3,8 @@ set -e
 
 echo "Building Lambda functions..."
 cd backend
-pip install -r requirements.txt -t get_url/
-pip install -r requirements.txt -t post_url/
+pip install -r requirements.txt -t get_url/ --upgrade
+pip install -r requirements.txt -t post_url/ --upgrade
 
 echo "Packaging Lambda functions..."
 cd get_url && zip -r ../get_url.zip . && cd ..
