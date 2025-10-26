@@ -24,6 +24,30 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
 }
 
+# DynamoDB Policy for Lambda
+resource "aws_iam_role_policy" "lambda_dynamodb" {
+  name = "${var.project_name}-lambda-dynamodb-policy"
+  role = aws_iam_role.lambda_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = aws_dynamodb_table.url_obfuscator.arn
+      }
+    ]
+  })
+}
+
 # Lambda Functions
 # Post URL
 resource "aws_lambda_function" "post_url" {
@@ -37,7 +61,7 @@ resource "aws_lambda_function" "post_url" {
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_basic,
-    aws_cloudwatch_log_group.post_url
+    aws_cloudwatch_log_group.url_obfuscator
   ]
 
   tags = local.common_tags
@@ -55,7 +79,7 @@ resource "aws_lambda_function" "get_url" {
 
   depends_on = [
     aws_iam_role_policy_attachment.lambda_basic,
-    aws_cloudwatch_log_group.get_urls
+    aws_cloudwatch_log_group.url_obfuscator
   ]
 
   tags = local.common_tags

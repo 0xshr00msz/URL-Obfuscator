@@ -1,15 +1,7 @@
 # CloudWatch Log Groups
-# POST
-resource "aws_cloudwatch_log_group" "post_url" {
-  name              = "/aws/lambda/${var.project_name}-post-url"
-  retention_in_days = 3
-
-  tags = local.common_tags
-}
-
-# GET
-resource "aws_cloudwatch_log_group" "get_urls" {
-  name              = "/aws/lambda/${var.project_name}-get-url"
+# Main
+resource "aws_cloudwatch_log_group" "url_obfuscator" {
+  name              = "/aws/lambda/${var.project_name}-url-obfuscator-${var.environment}"
   retention_in_days = 3
 
   tags = local.common_tags
@@ -91,10 +83,64 @@ resource "aws_api_gateway_integration_response" "options" {
   }
 }
 
+# CORS Configuration for /urls
+# duplicating the OPTIONS method, integration, method response, and integration response blocks specifically for the /urls resource.
+# Root ( /) and /urls paths will both respond correctly to OPTIONS requests.
+# CORS headers will be consistent across endpoints.
+# Browsers won’t block your frontend when calling the /urls API.
+# CORS Configuration for /urls
+
+resource "aws_api_gateway_method" "options_urls" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.urls.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_urls" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.urls.id
+  http_method = aws_api_gateway_method.options_urls.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_urls" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.urls.id
+  http_method = aws_api_gateway_method.options_urls.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_urls" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.urls.id
+  http_method = aws_api_gateway_method.options_urls.http_method
+  status_code = aws_api_gateway_method_response.options_urls.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+
+
 # API Gateway Deployment
 resource "aws_api_gateway_deployment" "main" {
   depends_on = [
     aws_api_gateway_integration_response.options,
+    aws_api_gateway_integration_response.options_urls,
     aws_api_gateway_integration.get_urls,
     aws_api_gateway_integration.post_url,
   ]
