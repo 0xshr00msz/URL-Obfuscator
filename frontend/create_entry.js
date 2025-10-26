@@ -14,7 +14,7 @@ postBtn.addEventListener('click', async () => {
     // POST the input into the DynamoDB
     try{
         const api_url = window.APP_CONFIG.API_URL
-        const response = await fetch(`${api_url}/post`, {
+        const response = await fetch(`${api_url}/urls`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({content: entryText})
