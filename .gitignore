@@ -1,38 +1,25 @@
-# Build artifacts
-*.zip
-*.tar.gz
+# Environment files
+backend/.env
+*.env
+config.js
+
+# Lambda deployment packages
+backend/*.zip
+backend/get_url.zip
+backend/post_url.zip
 
 # Python
-__pycache__/
+backend/get_url/__pycache__/
+backend/post_url/__pycache__/
 *.pyc
 *.pyo
-.env
-venv/
-.venv/
-
-# Node.js (if using npm/yarn)
-node_modules/
-package-lock.json
-yarn.lock
 
 # Terraform
-*.tfstate
-*.tfstate.*
-.terraform/
-.terraform.lock.hcl
+infrastructure/*.tfstate
+infrastructure/*.tfstate.*
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
 
-# AWS
-.aws/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
+# Temporary files
+*.tmp
 *.log
