@@ -1,28 +1,37 @@
-// AWS API
-// const API_URL = 'https://your-api-id.execute-api.region.amazonaws.com/prod';
+const apiUrl = window.APP_CONFIG.APIURL;
 
-const API_URL = 'http://localhost:5500'
+document.addEventListener("DOMContentLoaded", loadEntries);
+document.getElementById("loadBtn").addEventListener("click", loadEntries);
 
-async function submitWord() {
-    const word = document.getElementById("urlInput").value;
-    await fetch(API_URL + '/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word: word })
-    });
-    loadWords();
+async function loadEntries() {
+  const container = document.getElementById("entries");
+  container.innerHTML = "<p>Loading entries...</p>";
+
+  try {
+    const response = await fetch(apiUrl, { method: "GET" });
+    // Error handling for response
+    if (!response.ok) {
+      container.innerHTML = `<p class="error">Error: ${data.error || "Unknown"}</p>`;
+      return;
+    }
+    // Gets the data if the response is ok
+    const data = await response.json();
+    console.log(data);
+
+    if (Array.isArray(data) && data.length > 0) {
+      container.innerHTML = data
+        .map(
+          (item) => `
+          <div class="entry">
+            <pre>${JSON.stringify(item, null, 2)}</pre>
+          </div>
+        `
+        )
+        .join("");
+    } else {
+      container.innerHTML = "<p>No entries found.</p>";
+    }
+  } catch (err) {
+    container.innerHTML = `<p class="error">Server error: ${err.message}</p>`;
+  }
 }
-
-async function loadWords() {
-    const res = await fetch(API_URL + '/dashboard');
-    const words = await res.json();
-    const list = document.getElementById("urlList");
-    list.innerHTML = '';
-    words.forEach(w => {
-        const li = document.createElement("li");
-        li.innerText = w;
-        list.appendChild(li);
-    });
-}
-
-window.onload = loadWords;
