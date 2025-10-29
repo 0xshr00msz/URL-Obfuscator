@@ -1,0 +1,17 @@
+#set($uuid = $util.autoId())
+#set($url = $input.path('$.content'))
+#set($encodedUrl = $util.base64Encode($url))
+{
+    "TableName": "$stageVariables.URL_TABLE",
+    "Item": {
+        "id": {
+            "S": "$uuid"
+        },
+        "url": {
+            "S": "$url"
+        },
+        "encode_url": {
+            "S": "$encodedUrl"
+        }
+    }
+}
