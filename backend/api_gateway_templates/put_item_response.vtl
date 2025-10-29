@@ -1,0 +1,11 @@
+#set($context.responseOverride.header.Access-Control-Allow-Origin = "*")
+#set($context.responseOverride.header.Access-Control-Allow-Headers = "Content-Type")
+#set($context.responseOverride.header.Access-Control-Allow-Methods = "POST, OPTIONS")
+#set($uuid = $util.autoId())
+#set($url = $input.path('$.content'))
+#set($encodedUrl = $util.base64Encode($url))
+{
+    "message": "URL saved successfully",
+    "id": "$uuid",
+    "encode_url": "$encodedUrl"
+}
