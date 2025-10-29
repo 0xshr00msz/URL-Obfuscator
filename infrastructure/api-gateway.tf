@@ -19,9 +19,9 @@ resource "aws_api_gateway_rest_api" "main" {
   tags = local.common_tags
 }
 
-# API Gateway IAM Role
-resource "aws_iam_role" "api_gateway_auth" {
-  name = "${var.project_name}-api-gateway-auth-role"
+# API Gateway IAM Role for DynamoDB access
+resource "aws_iam_role" "api_gateway_dynamodb" {
+  name = "${var.project_name}-api-gateway-dynamodb-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -37,6 +37,25 @@ resource "aws_iam_role" "api_gateway_auth" {
   })
 
   tags = local.common_tags
+}
+
+resource "aws_iam_role_policy" "api_gateway_dynamodb" {
+  name = "${var.project_name}-api-gateway-dynamodb-policy"
+  role = aws_iam_role.api_gateway_dynamodb.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:Scan"
+        ]
+        Resource = aws_dynamodb_table.url_obfuscator.arn
+      }
+    ]
+  })
 }
 
 # CORS Configuration
@@ -141,8 +160,9 @@ resource "aws_api_gateway_deployment" "main" {
   depends_on = [
     aws_api_gateway_integration_response.options,
     aws_api_gateway_integration_response.options_urls,
-    aws_api_gateway_integration.get_urls,
-    aws_api_gateway_integration.post_url,
+    aws_api_gateway_integration_response.get_urls,
+    aws_api_gateway_integration_response.post_store,
+    aws_api_gateway_integration.post_encode,
   ]
 
   rest_api_id = aws_api_gateway_rest_api.main.id
@@ -157,6 +177,10 @@ resource "aws_api_gateway_stage" "stage" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.main.id
   stage_name    = var.environment
+
+  variables = {
+    URL_TABLE = aws_dynamodb_table.url_obfuscator.name
+  }
 
   tags = local.common_tags
 }
