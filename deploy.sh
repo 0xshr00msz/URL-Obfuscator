@@ -1,26 +1,30 @@
 #!/bin/bash
+
 set -e
 
-echo "Building Lambda functions..."
-cd backend
-pip install -r requirements.txt -t get_url/ --upgrade
-pip install -r requirements.txt -t post_url/ --upgrade
+echo "🚀 Deploying URL Obfuscator with API Gateway Direct Integrations..."
 
-echo "Packaging Lambda functions..."
-cd get_url && zip -r ../get_url.zip . && cd ..
-cd post_url && zip -r ../post_url.zip . && cd ..
+# Package Lambda function for encoding only
+echo "📦 Packaging encode Lambda function..."
+cd backend/encode_url
+zip -r ../encode_url.zip .
+cd ../..
 
-echo "Deploying infrastructure..."
-cd ../infrastructure
+# Deploy infrastructure
+echo "🏗️ Deploying infrastructure..."
+cd infrastructure
 terraform init
 terraform plan
 terraform apply -auto-approve
 
-echo "Getting API Gateway URL..."
+# Get API Gateway URL
 API_URL=$(terraform output -raw api_gateway_url)
+echo "✅ Deployment complete!"
+echo "🌐 API Gateway URL: $API_URL"
+echo ""
+echo "📋 Available endpoints:"
+echo "  POST $API_URL/encode  - Base64 encode URLs (Lambda)"
+echo "  POST $API_URL/store   - Store URLs (Direct DynamoDB)"
+echo "  GET  $API_URL/urls    - Get all URLs (Direct DynamoDB)"
 
-echo "Updating frontend config..."
-cd ../frontend
-
-echo "Deployment complete!"
-echo "API Gateway URL: $API_URL"
+cd ..
